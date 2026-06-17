@@ -31,6 +31,7 @@ def check_ipaddress(argument):
 
 
 
+# this function is used to print info. regarding the given specific ip address
 def info_ipaddress(ip_address):
 
     try:
@@ -56,6 +57,8 @@ def info_ipaddress(ip_address):
 
 
 
+#this function tell the abuse score of an ip addresss and tell weather it safe , maliciious or suspicious, and it also tell its total nummber
+#of report and date of last report 
 def score_and_reports(ip_address):
 
     if sys.argv[2].isdigit() and 0 < int(sys.argv[2]) < 366:
