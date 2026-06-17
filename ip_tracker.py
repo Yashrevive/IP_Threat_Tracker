@@ -33,7 +33,6 @@ def info_ipaddress(ip_address):
     else:
         data = response.json()
 
-
     if data['status'] == 'success':
         print(f'''        IP: {ip_address}
         Location: {data['city']},{data['regionName']},{data['country']},{data['zip']}
