@@ -2,6 +2,9 @@ import requests
 import sys
 import ipaddress
 import os
+import csv
+import re
+import socket
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -9,17 +12,39 @@ load_dotenv()
 
 def main():
     argument = check_argument()
-    ip_address = check_ipaddress(argument)
+    ip_address = check_argument_type(argument)    
     info_ipaddress(str(ip_address))
     score_and_reports(ip_address)
 
 
 
 def check_argument():
-    if len(sys.argv) == 3:
-        return sys.argv[1]
-    else:
+    if len(sys.argv) != 3 and len(sys.argv) != 4:
         sys.exit("Error: insufficient arguments")
+    else:
+        return(sys.argv[1])
+
+
+
+def check_argument_type(argument):
+
+    if '.csv' in argument:
+        ... 
+    elif re.search(r'^[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}$' , argument):
+        ip_address = check_ipaddress(argument)
+        return(ip_address)
+    else:
+        ip_address = convert_to_ip(argument)
+        ip_address = check_ipaddress(ip_address)
+        return(ip_address)
+
+
+
+def convert_to_ip(argument):
+    try:
+        return(socket.gethostbyname(argument))
+    except:
+        sys.exit('invalid domain name')
 
 
 
