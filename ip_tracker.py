@@ -54,12 +54,15 @@ def check_argument_type(argument, all_info):
         ip_address = check_ipaddress(argument)
         return ip_address
 
+    elif ":" in argument:
+        ip_address = check_ipaddress(argument)
+        return ip_address
+
     else:
         ip_address = convert_to_ip(argument)
         if "invalid" not in ip_address:
             ip_address = check_ipaddress(ip_address)
         return ip_address
-
 
 # This function is used to read and write from csv file
 def csv_handling(lst):
