@@ -1,46 +1,73 @@
-# IP Threat Tracker
+<div align="center">
+
+# 🛡️ IP Threat Tracker
+
+**A command-line threat intelligence tool for investigating IPs and domains.**
+
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen)
+![APIs](https://img.shields.io/badge/APIs-IP--API%20%7C%20AbuseIPDB-orange)
+
+</div>
+
+---
+
+## 📑 Table of Contents
+
+- [Description](#description)
+- [Features](#features)
+- [Demo](#demo)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Example Output](#example-output)
+- [Project Structure](#project-structure)
+- [Design Choices](#design-choices)
+- [Future Improvements](#future-improvements)
+- [Author](#author)
+
+---
 
 ## Description
 
-IP Threat Tracker is a command-line cybersecurity tool written in Python that helps users investigate an IP address and assess its reputation based on publicly available threat intelligence data.
+IP Threat Tracker is a command-line cybersecurity tool written in Python that helps users investigate IP addresses and domains and assess their reputation based on publicly available threat intelligence data.
 
-The program accepts an IP address and a time range as command-line arguments. It first validates the supplied IP address using Python's built-in `ipaddress` module. Once validated, it gathers geolocation and network information using the IP-API service. It then queries AbuseIPDB to determine whether the IP address has been reported for malicious activity and calculates its threat level based on the abuse confidence score.
+The program accepts either a single IP address/domain or a CSV file of targets, along with a time range, as command-line arguments. It validates each target — resolving domains to IP addresses where needed — using Python's built-in `ipaddress` and `socket` modules. Once validated, it gathers geolocation and network information using the IP-API service, then queries AbuseIPDB to determine whether the IP address has been reported for malicious activity and calculates its threat level based on the abuse confidence score.
 
-The tool provides users with important information about an IP address, including its location, Internet Service Provider (ISP), Autonomous System Number (ASN), abuse confidence score, report history, and the date of the most recent abuse report.
+The tool provides users with important information about each target, including its location, Internet Service Provider (ISP), Autonomous System Number (ASN), abuse confidence score, report history, and the date of the most recent abuse report. In **V2**, results can also be scanned in bulk from a CSV file and exported to an output CSV.
 
-This project was developed as the final project for CS50's Introduction to Programming with Python and demonstrates concepts such as command-line arguments, API integration, exception handling, environment variables, JSON processing, and modular program design.
+> This project began as independent practice built alongside CS50's Introduction to Programming with Python, and has since grown into a standalone cybersecurity portfolio project.
+
+---
 
 ## Features
 
-* Validates IPv4 and IPv6 addresses
-* Retrieves geolocation information for an IP address
-* Displays ISP and ASN details
-* Checks IP reputation using AbuseIPDB
-* Classifies IP addresses as Safe, Suspicious, or Malicious
-* Displays abuse report statistics
-* Handles invalid input and network-related errors
-* Protects API credentials using environment variables
+| | Feature |
+|---|---|
+| ✅ | Validates IPv4 and IPv6 addresses |
+| ✅ | Resolves domain names to IP addresses |
+| ✅ | Retrieves geolocation info for a target (city, region, country, ISP) |
+| ✅ | Displays ASN details |
+| ✅ | Checks IP reputation via AbuseIPDB |
+| ✅ | Classifies targets as **Safe**, **Suspicious**, or **Malicious** |
+| ✅ | Displays abuse report statistics and last-reported date |
+| 🆕 | **Bulk scans multiple IPs/domains from a CSV file** |
+| 🆕 | **Exports scan results to an output CSV** |
+| 🆕 | **Gracefully skips malformed or empty rows during bulk scans** |
+| 🔒 | Protects API credentials via environment variables |
 
-## Technologies Used
+---
 
-* Python 3
-* Requests
-* Python-dotenv
-* IP-API
-* AbuseIPDB
+## Demo
+
+![IP Threat Tracker demo — bulk CSV scanning and export](assets/demo.gif)
+
+---
 
 ## Installation
-
-Clone the repository:
 
 ```bash
 git clone <repository-url>
 cd <repository-folder>
-```
-
-Install the required dependencies:
-
-```bash
 pip install -r requirements.txt
 ```
 
@@ -50,48 +77,94 @@ Create a `.env` file in the project directory:
 my_abuseipdb_key=YOUR_API_KEY_HERE
 ```
 
-Replace `YOUR_API_KEY_HERE` with your AbuseIPDB API key.
+Replace `YOUR_API_KEY_HERE` with your [AbuseIPDB](https://www.abuseipdb.com/) API key.
+
+---
 
 ## Usage
 
-Run the program using:
+### 🔹 Single target mode
 
 ```bash
-python ip_tracker.py <IP_ADDRESS> <MAX_AGE_IN_DAYS>
+python ip_tracker.py <TARGET> <MAX_AGE_IN_DAYS>
 ```
 
-Example:
+`<TARGET>` can be an IPv4/IPv6 address or a domain name.
 
 ```bash
 python ip_tracker.py 8.8.8.8 30
 ```
 
+### 🔹 Bulk CSV mode (V2)
+
+```bash
+python ip_tracker.py <INPUT_CSV> <OUTPUT_CSV> <MAX_AGE_IN_DAYS>
+```
+
+The input CSV must have a `target` column containing one IP address or domain per row.
+
+```bash
+python ip_tracker.py targets.csv results.csv 30
+```
+
+<details>
+<summary>📋 Sample input CSV format</summary>
+
+```csv
+target
+8.8.8.8
+1.1.1.1
+example.com
+185.220.101.1
+```
+
+</details>
+
 ### Arguments
 
-| Argument        | Description                                            |
-| --------------- | ------------------------------------------------------ |
-| IP_ADDRESS      | The IP address to investigate                          |
-| MAX_AGE_IN_DAYS | Number of days of AbuseIPDB reports to analyze (1–365) |
+| Argument | Description |
+|---|---|
+| `TARGET` | An IP address or domain name to investigate (single mode) |
+| `INPUT_CSV` | Path to a CSV file with a `target` column (bulk mode) |
+| `OUTPUT_CSV` | Path to write scan results to (bulk mode) |
+| `MAX_AGE_IN_DAYS` | Number of days of AbuseIPDB reports to analyze (1–365) |
+
+---
 
 ## Example Output
+
+<details open>
+<summary><b>✅ Safe IP</b></summary>
 
 ```text
 IP: 8.8.8.8
 Location: Mountain View, California, United States
 Internet Service Provider: Google LLC
 Autonomous System Number: AS15169
-
 Abuse Score = 0/100 (Safe)
 ```
 
-If an IP address has previously been reported:
+</details>
+
+<details>
+<summary><b>🚨 Malicious IP</b></summary>
 
 ```text
 Abuse Score = 82/100 (Malicious)
-
 Total number of reports = 145
 Last reported date = 2026-05-12
 ```
+
+</details>
+
+<details>
+<summary><b>📄 Bulk CSV output</b></summary>
+
+Each row's result is written to the output CSV in the same format, separated by a blank row — one scan result block per input target.
+
+</details>
+
+---
 
 ## Project Structure
 
@@ -104,31 +177,35 @@ Last reported date = 2026-05-12
 └── test_project.py
 ```
 
-**Note:** The `.env` file is intentionally excluded from the repository because it contains private API credentials.
+> **Note:** `.env` is excluded from the repository because it contains private API credentials. Output CSVs generated by bulk mode are also excluded via `.gitignore`.
+
+---
 
 ## Design Choices
 
-One of the key design decisions was using Python's `ipaddress` module instead of regular expressions for IP validation. This approach is more reliable and supports both IPv4 and IPv6 addresses.
+- **`ipaddress` over regex** for IP validation — more reliable, and supports both IPv4 and IPv6 out of the box.
+- **`python-dotenv` for credentials** — keeps the AbuseIPDB key out of source control entirely.
+- **Two complementary APIs** — IP-API for geolocation/network data, AbuseIPDB for threat intelligence — combined into a single command.
+- **Shared logic between modes (V2)** — single-target and bulk CSV scanning call the same underlying lookup functions instead of duplicating logic across two code paths.
 
-The project uses environment variables through the `python-dotenv` package to securely store API credentials. This prevents sensitive information from being hardcoded into the source code or uploaded to GitHub.
-
-Two separate APIs were chosen to provide complementary information. IP-API supplies geolocation and network details, while AbuseIPDB provides threat intelligence and abuse-reporting data. Combining these sources allows the user to obtain both technical and security-related information about an IP address in a single command.
+---
 
 ## Future Improvements
 
-The current version of IP Threat Tracker focuses on gathering threat intelligence and reputation information about IP addresses. Future versions may include additional functionality such as:
+- [ ] Color-coded terminal output
+- [ ] Additional threat intelligence feed integrations
+- [ ] Graphical user interface (GUI)
+- [ ] Automated threat report generation
+- [ ] Report malicious IPs directly to AbuseIPDB from the app
+- [ ] Reputation history tracking for previously scanned IPs
 
-* Export scan results to JSON or CSV files
-* Support scanning multiple IP addresses at once
-* Add color-coded terminal output
-* Integrate additional threat intelligence feeds
-* Build a graphical user interface (GUI)
-* Generate automated threat reports
-* Add the ability to report malicious IP addresses directly to AbuseIPDB from within the application
-* Add reputation history tracking for previously scanned IP addresses
+---
 
 ## Author
 
 **Yash Kumar Kriplani**
 
-IP Threat Tracker is my first independently developed cybersecurity project. The goal of this project is to combine IP intelligence gathering and threat reputation analysis into a simple command-line tool that can help users quickly investigate potentially suspicious IP addresses.
+IP Threat Tracker is my first independently developed cybersecurity project — combining IP intelligence gathering and threat reputation analysis into a simple command-line tool for investigating potentially suspicious IPs and domains.
+
+<!-- Add your LinkedIn/GitHub profile links here, e.g.: -->
+<!-- [LinkedIn](your-linkedin-url) • [GitHub](your-github-url) -->
