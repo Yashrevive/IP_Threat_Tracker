@@ -64,6 +64,7 @@ def check_argument_type(argument, all_info):
             ip_address = check_ipaddress(ip_address)
         return ip_address
 
+
 # This function is used to read and write from csv file
 def csv_handling(lst):
 
