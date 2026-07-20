@@ -1,5 +1,6 @@
 import pytest
-from ip_tracker import check_ipaddress, convert_to_ip, score_and_reports
+from validators import check_ipaddress, convert_to_ip
+from api_clients import score_and_reports
 
 
 def test_check_ipaddress():
