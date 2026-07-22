@@ -28,7 +28,9 @@ def test_score_and_reports():
     all_info = []
 
     # Out-of-range day counts are rejected before any API call is made
-    with pytest.raises(SystemExit, match="number of days must lie in between 0 and 365"):
+    with pytest.raises(
+        SystemExit, match="number of days must lie in between 0 and 365"
+    ):
         score_and_reports("8.8.8.8", all_info, "400")
 
     # Non-numeric day counts are also rejected

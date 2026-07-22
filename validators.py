@@ -12,12 +12,11 @@ def check_ipaddress(argument):
         return f"Error: {argument} is invalid"
 
 
-
 # This function converts Domain to ip address
 def convert_to_ip(argument):
 
     try:
         return socket.gethostbyname(argument)
 
-    except socket.gaierror :
+    except socket.gaierror:
         return f"Error: {argument} is invalid"
