@@ -9,9 +9,9 @@ def test_check_ipaddress():
     assert str(check_ipaddress("2001:4860:4860::8888")) == "2001:4860:4860::8888"
 
     # Invalid input returns a descriptive error string instead of raising
-    assert check_ipaddress("999.999.999.999") == "Error: 999.999.999.999 is not a valid IP address"
-    assert check_ipaddress("hello") == "Error: hello is not a valid IP address"
-    assert check_ipaddress("") == "Error:  is not a valid IP address"
+    assert check_ipaddress("999.999.999.999") == "Error: 999.999.999.999 is invalid"
+    assert check_ipaddress("hello") == "Error: hello is invalid"
+    assert check_ipaddress("") == "Error:  is invalid"
 
 
 def test_convert_to_ip():
@@ -21,14 +21,16 @@ def test_convert_to_ip():
 
     # An unresolvable domain returns a descriptive error string
     result = convert_to_ip("this-domain-should-not-exist-abc123xyz.com")
-    assert result == "this-domain-should-not-exist-abc123xyz.com is invalid domain name"
+    assert result == "Error: this-domain-should-not-exist-abc123xyz.com is invalid"
 
 
 def test_score_and_reports():
     all_info = []
 
     # Out-of-range day counts are rejected before any API call is made
-    assert score_and_reports("8.8.8.8", all_info, "400") == "number of days must lie in between 0 and 365"
+    with pytest.raises(SystemExit, match="number of days must lie in between 0 and 365"):
+        score_and_reports("8.8.8.8", all_info, "400")
 
     # Non-numeric day counts are also rejected
-    assert score_and_reports("8.8.8.8", all_info, "abc") == "number of days must lie in between 0 and 365"
+    with pytest.raises(SystemExit, match="days should be an int"):
+        score_and_reports("8.8.8.8", all_info, "abc")

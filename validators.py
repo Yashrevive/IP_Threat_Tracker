@@ -9,7 +9,7 @@ def check_ipaddress(argument):
         return ipaddress.ip_address(argument)
 
     except ValueError:
-        return f"Error: {argument} is not a valid IP address"
+        return f"Error: {argument} is invalid"
 
 
 
@@ -19,5 +19,5 @@ def convert_to_ip(argument):
     try:
         return socket.gethostbyname(argument)
 
-    except:
-        return f"{argument} is invalid domain name"
+    except socket.gaierror :
+        return f"Error: {argument} is invalid"
