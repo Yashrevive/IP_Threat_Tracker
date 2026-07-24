@@ -2,6 +2,7 @@ import requests
 import os
 import sys
 
+from threshold import abuse_score_constraints
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -71,14 +72,17 @@ def score_and_reports(ip_address, all_info, info, days = 30):
         data = response.json()
         abuse_score = data["data"]["abuseConfidenceScore"]
         total_reports = data["data"]["totalReports"]
+        constraints = abuse_score_constraints()
+        safe = constraints['safe_upper']
+        suspicious = constraints['suspicious_upper']
 
         info['Abuse Score'] = abuse_score
         info['Total Reports'] = total_reports
 
-        if abuse_score <= 30:
+        if abuse_score <= safe:
             all_info.append(f"Abuse Score = {abuse_score}/100     (Safe)")
             info['Safety Status'] = 'Safe'
-        elif abuse_score < 70:
+        elif abuse_score < suspicious:
             all_info.append(f"Abuse Score = {abuse_score}/100     (Suspicious)")
             info['Safety Status'] = 'Suspicious'
         else:
