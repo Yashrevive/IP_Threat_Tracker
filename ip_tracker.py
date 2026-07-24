@@ -1,6 +1,5 @@
 import sys
 import csv
-import re
 import argparse
 
 from validators import check_ipaddress
@@ -9,19 +8,16 @@ from api_clients import info_ipaddress
 from api_clients import score_and_reports
 
 
+
 def main():
 
-    parser = argparse.ArgumentParser(
-        description="Used to retrive all info of an ip address or a domain"
-    )
+    parser = argparse.ArgumentParser(description="Used to retrive all info of an ip address or a domain")
 
     parser.add_argument("-ip", type=str, help="Enter ip address")
     parser.add_argument("-domain", type=str, help="Enter domain name")
     parser.add_argument("-ifile", type=str, help="Enter name of input file")
     parser.add_argument("-ofile", type=str, help="Enter name of output file")
-    parser.add_argument(
-        "-days", default=30, type=int, help="Enter total number of days"
-    )
+    parser.add_argument("-days", default=30, type=int, help="Enter total number of days")
 
     args = parser.parse_args()
 
@@ -31,77 +27,126 @@ def main():
     out = args.ofile
     days = args.days
 
+    info = {}
+
     if ip:
         all_info = []
-        ip = check_ipaddress(ip)
-        if "Error" in str(ip):
-            sys.exit(ip)
-        info_ipaddress(ip, all_info)
-        score_and_reports(ip, all_info, days)
-        for i in all_info:
-            if "Error" in i:
-                sys.exit(i)
-        for _ in all_info:
-            print(_)
+        output(ip, all_info, days, info)
 
     if domain:
         all_info = []
         ip = convert_to_ip(domain)
-        ip = check_ipaddress(ip)
-        if "Error" in str(ip):
-            sys.exit(ip)
-        info_ipaddress(ip, all_info)
-        score_and_reports(ip, all_info, days)
-        for i in all_info:
-            if "Error" in i:
-                sys.exit(i)
-        for _ in all_info:
-            print(_)
+        output(ip, all_info, days, info)
 
     if inp and out:
         all_info = []
-        csv_handling(inp, out, all_info, days)
+        csv_handling(inp, out, all_info, info, days)
+
+
+
+def output(ip, all_info, days, info):
+
+    ip = check_ipaddress(ip)
+    if "Error" in str(ip):
+        sys.exit(ip)
+    info_ipaddress(ip, all_info, info)
+    score_and_reports(ip, all_info, info, days)
+    for i in all_info:
+        if "Error" in i:
+            sys.exit(i)
+    for _ in all_info:
+        print(_)
+
 
 
 # This function is used to read and write from csv file
-def csv_handling(inp, out, all_info, days):
+def csv_handling(inp, out, all_info, info, days):
 
-    with open(inp) as inputs, open(out, "w") as outputs:
+    try:
+        with open(inp) as inputs, open(out, "w") as outputs:
+            reader = csv.DictReader(inputs)
 
-        reader = csv.DictReader(inputs)
-        writer = csv.DictWriter(outputs, fieldnames=["info"])
-        writer.writeheader()
-        outputs.write("\n")
+            fieldnames = [
+                "Serial No.",
+                "ip",
+                "Domain",
+                "city",
+                "region",
+                "country",
+                "zip",
+                "Internet Service Provider",
+                "Autonomous System",
+                "Abuse Score",
+                "Safety Status",
+                "Total Reports",
+                "Last Reported",
+                "Error",
+            ]
 
-        for line in reader:
+            writer = csv.DictWriter(outputs, fieldnames)
+            writer.writeheader()
 
-            all_info = []
-            argument = line["target"].strip()
+            c = 1
 
-            if argument != "" and argument != None:
+            for line in reader:
 
-                ip = check_ipaddress(argument)
+                target = line["target"]
+                info = {}
+                field_list = list(fieldnames)
+
+                ip = check_ipaddress(target)
+
                 if "Error" in str(ip):
-                    ip = convert_to_ip(argument)
-                    if "Error" in str(ip):
-                        writer.writerow({"info": ip})
-                        outputs.write("\n")
+
+                    ip_domain = convert_to_ip(target)
+
+                    if "Error" in str(ip_domain):
+                        # neither a valid IP nor a resolvable domain
+                        info["Error"] = ip_domain[6::]
+                        field_list.remove("Error")
+                        info["Domain"] = target
+                        field_list.remove("Domain")
+                        info["Serial No."] = c
+                        c += 1
+                        field_list.remove("Serial No.")
+
+                        for i in field_list:
+                            info[i] = ""
+                        writer.writerow(info)
                         continue
 
-                info_ipaddress(ip, all_info)
-                score_and_reports(ip, all_info, days)
-                c = 0
-                for i in all_info:
-                    if "Error" in i:
-                        writer.writerow({"info": i})
-                        outputs.write("\n")
+                    else:
+                        ip = check_ipaddress(ip_domain)
+                        info["Domain"] = target
+                        info["Serial No."] = c
                         c += 1
-                        break
-                if c == 1:
+                        info = info_ipaddress(ip, all_info, info)
+                        info = score_and_reports(ip, all_info, info, days)
+                        for i in info.keys():
+                            field_list.remove(i)
+                        for j in field_list:
+                            info[j] = ""
+                        writer.writerow(info)
+                        continue
+
+                else:
+                    # target was already a literal IP
+                    info["Domain"] = ip
+                    info["Serial No."] = c
+                    c += 1
+                    info = info_ipaddress(ip, all_info, info)
+                    info = score_and_reports(ip, all_info, info, days)
+                    for i in info.keys():
+                        field_list.remove(i)
+                    for j in field_list:
+                        info[j] = ""
+                    writer.writerow(info)
                     continue
-                for _ in all_info:
-                    writer.writerow({"info": _})
-                outputs.write("\n")
+
+
+    except FileNotFoundError:
+        sys.exit(f"{inp} not exists")
+
 
 
 if __name__ == "__main__":
