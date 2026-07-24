@@ -7,6 +7,10 @@ from validators import convert_to_ip
 from api_clients import info_ipaddress
 from api_clients import score_and_reports
 
+from colorama import just_fix_windows_console
+just_fix_windows_console()  
+from termcolor import colored
+
 
 
 def main():
@@ -54,8 +58,16 @@ def output(ip, all_info, days, info):
     for i in all_info:
         if "Error" in i:
             sys.exit(i)
-    for _ in all_info:
-        print(_)
+    for j in all_info:
+        if info['Safety Status'] == 'Safe':
+            print(colored(j,'green'))
+        if info['Safety Status'] == 'Suspicious':
+            print(colored(j,'yellow'))
+        if info['Safety Status'] == 'Malicious':
+            print(colored(j,'red'))
+
+
+
 
 
 
