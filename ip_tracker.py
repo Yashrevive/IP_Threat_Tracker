@@ -69,8 +69,6 @@ def output(ip, all_info, days, info):
 
 
 
-
-
 # This function is used to read and write from csv file
 def csv_handling(inp, out, all_info, info, days):
 
@@ -80,8 +78,7 @@ def csv_handling(inp, out, all_info, info, days):
 
             fieldnames = [
                 "Serial No.",
-                "ip",
-                "Domain",
+                "Input",
                 "city",
                 "region",
                 "country",
@@ -116,8 +113,8 @@ def csv_handling(inp, out, all_info, info, days):
                         # neither a valid IP nor a resolvable domain
                         info["Error"] = ip_domain[6::]
                         field_list.remove("Error")
-                        info["Domain"] = target
-                        field_list.remove("Domain")
+                        info["Input"] = target
+                        field_list.remove("Input")
                         info["Serial No."] = c
                         c += 1
                         field_list.remove("Serial No.")
@@ -129,7 +126,7 @@ def csv_handling(inp, out, all_info, info, days):
 
                     else:
                         ip = check_ipaddress(ip_domain)
-                        info["Domain"] = target
+                        info["Input"] = target
                         info["Serial No."] = c
                         c += 1
                         info = info_ipaddress(ip, all_info, info)
@@ -143,7 +140,7 @@ def csv_handling(inp, out, all_info, info, days):
 
                 else:
                     # target was already a literal IP
-                    info["Domain"] = ip
+                    info["Input"] = ip
                     info["Serial No."] = c
                     c += 1
                     info = info_ipaddress(ip, all_info, info)

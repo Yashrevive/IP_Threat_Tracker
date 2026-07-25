@@ -33,7 +33,6 @@ Location: {data['city']},{data['regionName']},{data['country']},{data['zip']}
 Internet service Provider: {data['isp']}
 Autonomous System: {data['as']} """)
 
-        info['ip'] = data['query']
         info['city'] = data['city']
         info['region'] = data['regionName']
         info['country'] = data['country']
