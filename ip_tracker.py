@@ -4,8 +4,12 @@ import argparse
 
 from validators import check_ipaddress
 from validators import convert_to_ip
+from validators import verdict
+from validators import is_domain
+from validators import raise_for_Status
 from api_clients import info_ipaddress
 from api_clients import score_and_reports
+from api_clients import virustotal_report
 
 from colorama import just_fix_windows_console
 just_fix_windows_console()  
@@ -54,7 +58,9 @@ def output(ip, all_info, days, info):
     if "Error" in str(ip):
         sys.exit(ip)
     info_ipaddress(ip, all_info, info)
+    virustotal_report(ip, all_info, info)
     score_and_reports(ip, all_info, info, days)
+    verdict(all_info, info)
     for i in all_info:
         if "Error" in i:
             sys.exit(i)
@@ -79,12 +85,14 @@ def csv_handling(inp, out, all_info, info, days):
             fieldnames = [
                 "Serial No.",
                 "Input",
+                "Status",
                 "city",
                 "region",
                 "country",
                 "zip",
                 "Internet Service Provider",
                 "Autonomous System",
+                "Malicious Reports",
                 "Abuse Score",
                 "Safety Status",
                 "Total Reports",
@@ -99,38 +107,85 @@ def csv_handling(inp, out, all_info, info, days):
 
             for line in reader:
 
-                target = line["target"]
+                target = line["Input"].strip()
                 info = {}
                 field_list = list(fieldnames)
 
-                ip = check_ipaddress(target)
+                check = is_domain(target)
 
-                if "Error" in str(ip):
+                if target != None and target != '':
 
-                    ip_domain = convert_to_ip(target)
+                    ip = check_ipaddress(target)
 
-                    if "Error" in str(ip_domain):
-                        # neither a valid IP nor a resolvable domain
-                        info["Error"] = ip_domain[6::]
-                        field_list.remove("Error")
-                        info["Input"] = target
-                        field_list.remove("Input")
-                        info["Serial No."] = c
-                        c += 1
-                        field_list.remove("Serial No.")
+                    if "Error" in str(ip):
 
-                        for i in field_list:
-                            info[i] = ""
-                        writer.writerow(info)
-                        continue
+                        if check == True :
+
+                            ip_domain = convert_to_ip(target)
+
+                            if "Error" in str(ip_domain):
+                                # neither a valid IP nor a resolvable domain
+                                info["Error"] = ip_domain[6::]
+                                field_list.remove("Error")
+                                info["Input"] = target
+                                field_list.remove("Input")
+                                info['Status'] = 'Invalid'
+                                field_list.remove("Status")                 
+                                info["Serial No."] = c
+                                c += 1
+                                field_list.remove("Serial No.")
+
+                                for i in field_list:
+                                    info[i] = ""
+                                writer.writerow(info)
+                                continue
+
+                            else:
+                                ip = check_ipaddress(ip_domain)
+                                info["Input"] = target
+                                info["Serial No."] = c
+                                c += 1
+                                raise_for_Status(target, info)
+                                if info['Status'] == 'Public':
+                                    info = info_ipaddress(ip, all_info, info)
+                                    info = virustotal_report(ip, all_info, info)
+                                    info = score_and_reports(ip, all_info, info, days)
+                                    info = verdict(all_info, info)
+                                for i in info.keys():
+                                    field_list.remove(i)
+                                for j in field_list:
+                                    info[j] = ""
+                                writer.writerow(info)
+                                continue
+
+                        else:
+                            info["Error"] = f'{target} is invalid'
+                            field_list.remove("Error")
+                            info["Input"] = target
+                            field_list.remove("Input")
+                            info['Status'] = 'Invalid'
+                            field_list.remove("Status")                 
+                            info["Serial No."] = c
+                            c += 1
+                            field_list.remove("Serial No.")
+
+                            for i in field_list:
+                                info[i] = ""
+                            writer.writerow(info)
+                            continue
+
 
                     else:
-                        ip = check_ipaddress(ip_domain)
-                        info["Input"] = target
+                        # target was already a literal IP
+                        info["Input"] = ip
                         info["Serial No."] = c
                         c += 1
-                        info = info_ipaddress(ip, all_info, info)
-                        info = score_and_reports(ip, all_info, info, days)
+                        info = raise_for_Status(target, info)
+                        if info['Status'] == 'Public' :
+                            info = info_ipaddress(ip, all_info, info)
+                            info = virustotal_report(ip, all_info, info)
+                            info = score_and_reports(ip, all_info, info, days)
+                            info = verdict(all_info, info)
                         for i in info.keys():
                             field_list.remove(i)
                         for j in field_list:
@@ -138,23 +193,10 @@ def csv_handling(inp, out, all_info, info, days):
                         writer.writerow(info)
                         continue
 
-                else:
-                    # target was already a literal IP
-                    info["Input"] = ip
-                    info["Serial No."] = c
-                    c += 1
-                    info = info_ipaddress(ip, all_info, info)
-                    info = score_and_reports(ip, all_info, info, days)
-                    for i in info.keys():
-                        field_list.remove(i)
-                    for j in field_list:
-                        info[j] = ""
-                    writer.writerow(info)
-                    continue
-
 
     except FileNotFoundError:
         sys.exit(f"{inp} not exists")
+
 
 
 

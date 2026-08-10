@@ -2,10 +2,11 @@ import requests
 import os
 import sys
 
-from threshold import abuse_score_constraints
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
 
 
 # this function is used to print info. regarding the given specific ip address
@@ -19,7 +20,8 @@ def info_ipaddress(ip_address, all_info, info):
 
     except requests.RequestException:
         all_info.append(f"Error: Can't connect to the api for {ip_address}")
-        return
+        info['Error'] = f"Can't connect to ip-api for {ip_address}"
+        return info
 
     else:
         data = response.json()
@@ -44,8 +46,10 @@ Autonomous System: {data['as']} """)
     
     else:
         all_info.append(f"Error: {ip_address}: {data['message']}")
-        info['Error'] = f'{ip_address}: {data['message']}'
+
         return info
+
+
 
 
 # this function tells the abuse score of an ip address and whether it's safe, malicious
@@ -71,22 +75,11 @@ def score_and_reports(ip_address, all_info, info, days = 30):
         data = response.json()
         abuse_score = data["data"]["abuseConfidenceScore"]
         total_reports = data["data"]["totalReports"]
-        constraints = abuse_score_constraints()
-        safe = constraints['safe_upper']
-        suspicious = constraints['suspicious_upper']
 
         info['Abuse Score'] = abuse_score
         info['Total Reports'] = total_reports
 
-        if abuse_score <= safe:
-            all_info.append(f"Abuse Score = {abuse_score}/100     (Safe)")
-            info['Safety Status'] = 'Safe'
-        elif abuse_score < suspicious:
-            all_info.append(f"Abuse Score = {abuse_score}/100     (Suspicious)")
-            info['Safety Status'] = 'Suspicious'
-        else:
-            all_info.append(f"Abuse Score = {abuse_score}/100     (malicious)")
-            info['Safety Status'] = 'Malicious'
+        all_info.append(f"Abuse Score = {abuse_score}/100")
 
         if abuse_score != 0:
             last_date = data["data"]["lastReportedAt"].split("T")[0]
@@ -101,3 +94,23 @@ last reported date = {last_date}""")
 
     except requests.RequestException:
         all_info.append(f"Error: can't connect to abuseipdb for {ip_address}")
+        info['Error'] = "Can't connect to AbuseIPBD"
+        return info 
+
+
+
+
+def virustotal_report(ip, all_info, info):
+
+    api_key = os.getenv('vt_api_key')
+    url = 'https://www.virustotal.com/api/v3/ip_addresses/'
+
+    response = requests.get(f'{url}{ip}', headers={'x-apikey' : api_key})
+    data = response.json()
+
+    malicious_reports = data['data']['attributes']['last_analysis_stats']['malicious']
+
+    all_info.append(f'Total malicious reports = {malicious_reports}')
+    info['Malicious Reports'] = malicious_reports
+
+    return info

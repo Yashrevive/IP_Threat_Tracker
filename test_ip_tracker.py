@@ -36,3 +36,7 @@ def test_score_and_reports():
     # Non-numeric day counts are also rejected
     with pytest.raises(SystemExit, match="days should be an int"):
         score_and_reports("8.8.8.8", all_info, "abc")
+
+
+def sample():
+    assert check_ipaddress('8.8.8') == 'Error: 8.8.8 is invalid'
