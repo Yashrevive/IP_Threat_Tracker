@@ -35,6 +35,7 @@ Location: {data['city']},{data['regionName']},{data['country']},{data['zip']}
 Internet service Provider: {data['isp']}
 Autonomous System: {data['as']} """)
 
+        info['Input'] = ip_address
         info['city'] = data['city']
         info['region'] = data['regionName']
         info['country'] = data['country']
@@ -46,15 +47,15 @@ Autonomous System: {data['as']} """)
     
     else:
         all_info.append(f"Error: {ip_address}: {data['message']}")
+        info['Status'] = data['message']
 
         return info
 
 
 
 
-# this function tells the abuse score of an ip address and whether it's safe, malicious
-# or suspicious, and also gives its total number of reports and date of last report.
-# `days` is sys.argv[2] for single-IP mode or sys.argv[3] for CSV mode.
+'''this function tells the abuse score of an ip address and whether it's safe, malicious
+or suspicious, and also gives its total number of reports and date of last report.'''
 def score_and_reports(ip_address, all_info, info, days = 30):
 
     try:

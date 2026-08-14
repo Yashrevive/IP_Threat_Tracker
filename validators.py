@@ -68,6 +68,8 @@ def is_domain(target):
 
 def raise_for_Status(target, info):
 
+    # if is_domain(target):
+    #     target = convert_to_ip(target)
     target = ipaddress.ip_address(target)
 
     if target.is_loopback:
