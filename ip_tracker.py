@@ -51,7 +51,6 @@ def main():
         logger.process(ip)
         info["Input"] = ip
         output(ip, all_info, days, info)
-        print(info)
         logger.judgement(info)
 
     if domain:
