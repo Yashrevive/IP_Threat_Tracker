@@ -2,22 +2,7 @@
 
 A command-line tool that checks IP addresses (or domains) against multiple threat intelligence sources and classifies them as **Safe**, **Suspicious**, or **Malicious** — with color-coded terminal output and bulk CSV scanning support.
 
-```
- _____________          ___    __                              __    __                     __             
-/_  __/  _/ _ \\        / _ \\  / /_  ____ ___  ____ ___/ /_  / /_______ _______/ /_____ ____
- / /  / // ___/       /_  __/ / __/ / __/  _ \\/ __// _  __/ / __/ __/ __/ __/  '_/ -_) __/
-/_/  /___/_/            /_/   \\__/  \\___/  \\__/_/  \\__/_/\\__/  \\__/_/  \\__/\\__/_/\\_\\\\__/_/   
-```
-
-## Demo
-
-**Single lookup**
-
-![Single lookup demo](assets/demo_single_lookup.gif)
-
-**Bulk scan**
-
-![Bulk scan demo](assets/demo_bulk_scan.gif)
+> Retrieve geolocation, ISP, and threat intelligence for any IP or domain — straight from the terminal.
 
 ## What it does
 
