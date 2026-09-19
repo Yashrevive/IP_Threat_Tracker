@@ -3,6 +3,7 @@ import csv
 import argparse
 import pyfiglet
 import colorama
+import time
 
 import logger
 
@@ -24,17 +25,14 @@ from termcolor import colored
 
 def main():
 
-    parser = argparse.ArgumentParser(
-        description="Used to retrive all info of an ip address or a domain"
-    )
+    parser = argparse.ArgumentParser(description="Used to retrive all info of an ip address or a domain")
 
     parser.add_argument("-ip", type=str, help="Enter ip address")
     parser.add_argument("-domain", type=str, help="Enter domain name")
     parser.add_argument("-ifile", type=str, help="Enter name of input file")
     parser.add_argument("-ofile", type=str, help="Enter name of output file")
-    parser.add_argument(
-        "-days", default=30, type=int, help="Enter total number of days"
-    )
+    parser.add_argument("-days", default=30, type=int, help="Enter total number of days")
+    parser.add_argument('-vt', default='n', type=str, help='do you want VIRUSTOTAL ? (y/n)')
 
     args = parser.parse_args()
 
@@ -43,6 +41,7 @@ def main():
     inp = args.ifile
     out = args.ofile
     days = args.days
+    vt = args.vt
 
     info = {}
 
@@ -50,7 +49,7 @@ def main():
         all_info = []
         logger.process(ip)
         info["Input"] = ip
-        output(ip, all_info, days, info)
+        output(ip, all_info, days, info, vt)
         logger.judgement(info)
 
     if domain:
@@ -60,13 +59,13 @@ def main():
             info["Status"] = "Invalid"
             sys.exit(colored(logger.judgement(info), "red"))
         logger.process(domain)
-        output(ip, all_info, days, info)
+        output(ip, all_info, days, info, vt)
         info["Input"] = domain
         logger.judgement(info)
 
     if inp and out:
         all_info = []
-        csv_handling(inp, out, all_info, info, days)
+        csv_handling(inp, out, all_info, info, days, vt)
 
 
 def title():
@@ -74,7 +73,7 @@ def title():
     print(colored(name, "green", attrs=["dark"]))
 
 
-def output(ip, all_info, days, info):
+def output(ip, all_info, days, info, vt):
 
     title()
 
@@ -84,9 +83,10 @@ def output(ip, all_info, days, info):
         logger.judgement(info)
         sys.exit(colored(ip, "red"))
     info_ipaddress(ip, all_info, info)
-    virustotal_report(ip, all_info, info)
+    if vt=='y' or vt=='Y':
+        virustotal_report(ip, all_info, info)
     score_and_reports(ip, all_info, info, days)
-    verdict(all_info, info)
+    verdict(all_info, info, vt)
     raise_for_Status(ip, info)
 
     for i in all_info:
@@ -104,7 +104,7 @@ def output(ip, all_info, days, info):
 
 
 # This function is used to read and write from csv file
-def csv_handling(inp, out, all_info, info, days):
+def csv_handling(inp, out, all_info, info, days, vt):
 
     title()
 
@@ -138,6 +138,8 @@ def csv_handling(inp, out, all_info, info, days):
             c = 1
 
             for line in reader:
+
+                time.sleep(0.5)
 
                 target = line["Input"].strip()
                 print(colored(logger.process(target), "green"))
@@ -184,9 +186,10 @@ def csv_handling(inp, out, all_info, info, days):
                                 raise_for_Status(ip, info)
                                 if info["Status"] == "Public":
                                     info = info_ipaddress(ip, all_info, info)
-                                    info = virustotal_report(ip, all_info, info)
+                                    if vt=='y' or vt=='Y':
+                                        info = virustotal_report(ip, all_info, info)
                                     info = score_and_reports(ip, all_info, info, days)
-                                    info = verdict(all_info, info)
+                                    info = verdict(all_info, info, vt)
 
                                     message = logger.judgement(info)
                                     if info["Safety Status"] == "Safe":
@@ -234,9 +237,10 @@ def csv_handling(inp, out, all_info, info, days):
                         info = raise_for_Status(target, info)
                         if info["Status"] == "Public":
                             info = info_ipaddress(ip, all_info, info)
-                            info = virustotal_report(ip, all_info, info)
+                            if vt=='y' or vt=='Y':
+                                info = virustotal_report(ip, all_info, info)
                             info = score_and_reports(ip, all_info, info, days)
-                            info = verdict(all_info, info)
+                            info = verdict(all_info, info, vt)
 
                             message = logger.judgement(info)
                             if info["Safety Status"] == "Safe":

@@ -12,7 +12,7 @@ def check_ipaddress(argument):
         return ipaddress.ip_address(argument)
 
     except ValueError:
-        return f"Error: {argument} is invalid"
+        return f"Error: Invalid IP Address"
 
 
 # This function converts Domain to ip address
@@ -22,10 +22,10 @@ def convert_to_ip(argument):
         return socket.gethostbyname(argument)
 
     except socket.gaierror:
-        return f"Error: {argument} is invalid"
+        return f"Error: Invalid Domain"
 
 
-def verdict(all_info, info):
+def verdict(all_info, info, vt):
 
     constraints_abuse = abuse_score_constraints()
     abuse_safe = constraints_abuse["safe_upper"]
@@ -35,22 +35,37 @@ def verdict(all_info, info):
     vt_safe = constraints_vt["safe_upper"]
     vt_suspicious = constraints_vt["suspicious_upper"]
 
-    if (info["Abuse Score"] <= abuse_safe) and (info["Malicious Reports"] <= vt_safe):
-        all_info.append(f"Safety Status: Safe")
-        info["Safety Status"] = "Safe"
-    elif (info["Abuse Score"] >= abuse_suspicious) or (
-        vt_safe >= info["Malicious Reports"] <= vt_suspicious
-    ):
-        all_info.append(f"Safety Status: Malicious")
-        info["Safety Status"] = "Malicious"
-    elif (info["Abuse Score"] >= abuse_suspicious) and (
-        vt_safe >= info["Malicious Reports"] <= vt_suspicious
-    ):
-        all_info.append(f"Safety Status: Malicious")
-        info["Safety Status"] = "Malicious"
+    if vt=='y' or vt=='Y':
+
+        if (info["Abuse Score"] <= abuse_safe) and (info["Malicious Reports"] <= vt_safe):
+            all_info.append(f"Safety Status: Safe")
+            info["Safety Status"] = "Safe"
+        elif (info["Abuse Score"] >= abuse_suspicious) or (
+            vt_safe >= info["Malicious Reports"] <= vt_suspicious
+        ):
+            all_info.append(f"Safety Status: Malicious")
+            info["Safety Status"] = "Malicious"
+        elif (info["Abuse Score"] >= abuse_suspicious) and (
+            vt_safe >= info["Malicious Reports"] <= vt_suspicious
+        ):
+            all_info.append(f"Safety Status: Malicious")
+            info["Safety Status"] = "Malicious"
+        else:
+            all_info.append(f"Safety Status: Suspicious")
+            info["Safety Status"] = "Suspicious"
+
     else:
-        all_info.append(f"Safety Status: Suspicious")
-        info["Safety Status"] = "Suspicious"
+
+        if (info["Abuse Score"] <= abuse_safe):
+            all_info.append(f"Safety Status: Safe")
+            info["Safety Status"] = "Safe"
+        elif (info["Abuse Score"] <= abuse_suspicious) and (info['Abuse Score'] >= abuse_safe):
+            all_info.append(f"Safety Status: Malicious")
+            info["Safety Status"] = "Malicious"
+        else:
+            all_info.append(f"Safety Status: Suspicious")
+            info["Safety Status"] = "Suspicious"
+
 
     return info
 
@@ -84,8 +99,6 @@ def raise_for_Status(target, info):
     elif target.is_global:
         info["Status"] = "Public"
     else:
-        info["Status"] = (
-            "Reserved"  # catches shared/CGNAT space (100.64.0.0/10) and anything else unclassified
-        )
+        info["Status"] = ("Reserved")
 
     return info

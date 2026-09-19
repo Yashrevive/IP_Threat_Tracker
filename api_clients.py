@@ -1,6 +1,7 @@
 import requests
 import os
 import sys
+import time
 
 from dotenv import load_dotenv
 
@@ -18,7 +19,7 @@ def info_ipaddress(ip_address, all_info, info):
 
     except requests.RequestException:
         all_info.append(f"Error: Can't connect to the api for {ip_address}")
-        info["Error"] = f"Can't connect to ip-api for {ip_address}"
+        info["Error"] = f"Can't connect to ip-api "
         return info
 
     else:
@@ -52,8 +53,6 @@ Autonomous System: {data['as']} """)
 
 """this function tells the abuse score of an ip address and whether it's safe, malicious
 or suspicious, and also gives its total number of reports and date of last report."""
-
-
 def score_and_reports(ip_address, all_info, info, days=30):
 
     try:
@@ -95,18 +94,27 @@ last reported date = {last_date}""")
         info["Error"] = "Can't connect to AbuseIPBD"
         return info
 
-
+''' this function retrives no. of times an object has been reported via VIRUSTOTAL'''
 def virustotal_report(ip, all_info, info):
+    
+    try:
 
-    api_key = os.getenv("vt_api_key")
-    url = "https://www.virustotal.com/api/v3/ip_addresses/"
+        api_key = os.getenv("vt_api_key")
+        url = "https://www.virustotal.com/api/v3/ip_addresses/"
 
-    response = requests.get(f"{url}{ip}", headers={"x-apikey": api_key})
-    data = response.json()
+        response = requests.get(f"{url}{ip}", headers={"x-apikey": api_key})
+        data = response.json()
 
-    malicious_reports = data["data"]["attributes"]["last_analysis_stats"]["malicious"]
+        malicious_reports = data["data"]["attributes"]["last_analysis_stats"]["malicious"]
 
-    all_info.append(f"Total malicious reports = {malicious_reports}")
-    info["Malicious Reports"] = malicious_reports
+        all_info.append(f"Total malicious reports = {malicious_reports}")
+        info["Malicious Reports"] = malicious_reports
 
-    return info
+        time.sleep(15)
+
+        return info
+
+    except:
+        all_info.append(f"Error: can't connect to VIRUSTOTAL for {ip}")
+        info["Error"] = "Can't connect to VIRUSTOTAL"
+        return info        
